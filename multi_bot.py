@@ -197,16 +197,20 @@ def build_frame(df4h, df30, a):
     h = h[["avail", "h4_close", "h4_ema50", "h4_ema200", "h4_adx", "h4_high20", "h4_low20"]]
 
     f = df30.copy()
-    f["ema21"], f["ema50"] = ema(f.close, 21), ema(f.close, 50)
-    f["rsi"], f["atr"] = rsi(f.close), atr(f)
+    f["ema21"] = ema(f.close, 21)
+    f["ema50"] = ema(f.close, 50)
+    f["rsi"] = rsi(f.close)
+    f["atr"] = atr(f)
     f["atr_pct"] = 100 * f.atr / f.close
     macd = ema(f.close, 12) - ema(f.close, 26)
     f["hist"] = macd - ema(macd, 9)
     f["vol_ratio"] = f.volume / f.volume.rolling(20).mean() if a["has_vol"] else 1.0
-    f["swing_low"], f["swing_high"] = f.low.rolling(10).min(), f.high.rolling(10).max()
-    f["touch_long"] = (f.low <= f.ema21).astype(int).rolling(8).max() == 1
-    f["touch_short"] = (f.high >= f.ema21).astype(int).rolling(8).max() == 1
-    f["rsi_min8"], f["rsi_max8"] = f.rsi.rolling(8).min().shift(1), f.rsi.rolling(8).max().shift(1)
+    f["swing_low"] = f.low.rolling(10).min()
+    f["swing_high"] = f.high.rolling(10).max()
+    f["touch_long"] = (f.low <= f["ema21"]).astype(int).rolling(8).max() == 1
+    f["touch_short"] = (f.high >= f["ema21"]).astype(int).rolling(8).max() == 1
+    f["rsi_min8"] = f.rsi.rolling(8).min().shift(1)
+    f["rsi_max8"] = f.rsi.rolling(8).max().shift(1)
     return pd.merge_asof(f, h, left_on="close_time", right_on="avail", direction="backward")
 
 # ------------------------------------------------------------------ strategy + ranking score
